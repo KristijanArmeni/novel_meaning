@@ -10,7 +10,7 @@ library(reshape)
 curr_dir = getwd()
 
 inp_dir = 'D:/Kristijan/raziskovalno/novel_meaning/data/logs'
-out_dir = 'D:/Kristijan/raziskovalno/novel_meaning/data/logs'
+out_dir = 'D:/Kristijan/raziskovalno/novel_meaning/output/beh'
 
 # set proper dir for reading in the files
 if (curr_dir != inp_dir){
@@ -53,7 +53,26 @@ groupMeans <- cast(ratings2, formula = group~mip, value = "rating", mean)
 #####-------------------------PLOT-THE-DATA
 
 #summary plots
-summary_plot <- ggplot(data = ratings, aes(x = ratings$mip1))
 
+mip = ratings2$mip
+rating = ratings2$rating
+group = ratings2$group
+
+summary_plot <- ggplot(data = ratings2) +
+                
+                stat_summary(fun.data = 'mean_se',
+                              position = position_dodge(width = 0.5),
+                              aes(x = mip,
+                                  y = rating,
+                                  color = group)) +
+                
+                geom_abline(aes(x = mip,
+                                y = rating,
+                                color = group),
+                            stat = 'summary')
+summary_plot
+
+#saving the plot
+ggsave(filename = 'logs_plot', plot = summary_plot, path = out_dir)
 
 #####-------------------------PRINT-THE-DATA
