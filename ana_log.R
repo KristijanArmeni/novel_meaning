@@ -1,6 +1,9 @@
 #NOVEL_MEANING
 
 #this is the script for analysing individual emotion/attention/motivation ratings
+#by Kristijan Armeni
+
+#####-------------------------INITIALISATION
 
 library(ggplot2)
 library(reshape)
@@ -14,12 +17,14 @@ if (curr_dir != inp_dir){
   setwd(inp_dir)
 }
 
-###----------------------------------------------------------------------###
+#####-------------------------READ-IN
 
 # read in the data
 my_data <- read.table("Ratings.txt", header = TRUE)
 
-## RESHAPE THE DATA
+#####-------------------------SHAPE-THE-DATA
+
+#transform mood variable to factor
 my_data$mood <- factor(my_data$mood, levels = c(1,2), labels = c("happy", "sad"))
 
 #ratings
@@ -40,6 +45,15 @@ sum_stat_mip1 <- aggregate(ratings$mip1, by = list(ratings$group), FUN = summary
 sum_stat_mip2 <- aggregate(ratings$mip2, by = list(ratings$group), FUN = summary)
 sum_stat_mip3 <- aggregate(ratings$mip3, by = list(ratings$group), FUN = summary)
 
-#summary plots
-summary_plot <- ggplot(data = ratings, aes(x = ratings$mip1,))
+#reshaping my data for plotting
+ratings2 <- melt(ratings, id = c('ID', 'group'))
 
+groupMeans <- cast(ratings2, formula = group~mip, value = "rating", mean)
+
+#####-------------------------PLOT-THE-DATA
+
+#summary plots
+summary_plot <- ggplot(data = ratings, aes(x = ratings$mip1))
+
+
+#####-------------------------PRINT-THE-DATA
