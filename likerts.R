@@ -39,3 +39,17 @@ for (i in 1:length(myfiles)){
 
 }
 
+names(summary_data)[2] <- 'group'
+
+my_mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+summary_data <- ddply(sub_all, ~sID + Condition + condition,
+                      summarise,
+                      N = length(sens_rat),
+                      min = min(sens_rat),
+                      max = max(sens_rat),
+                      mean = mean(sens_rat),
+                      mode = my_mode(sens_rat))
