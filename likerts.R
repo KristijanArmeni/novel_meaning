@@ -39,7 +39,12 @@ for (i in 1:length(myfiles)){
 
 }
 
+#####-------------------------SUMMARIES
+
 names(summary_data)[2] <- 'group'
+summary_data$group <- factor(summary_data$group)
+summary_data$condition <- factor(summary_data$condition)
+
 
 my_mode <- function(x) {
   ux <- unique(x)
@@ -52,4 +57,22 @@ summary_data <- ddply(sub_all, ~sID + Condition + condition,
                       min = min(sens_rat),
                       max = max(sens_rat),
                       mean = mean(sens_rat),
+                      sd_min   = round(mean - sd(sens_rat),2),
+                      sd_max   = round(mean + sd(sens_rat), 2),
                       mode = my_mode(sens_rat))
+
+#####-------------------------PLOTS
+
+sum_plot <- ggplot(data = summary_data,
+                          aes(x = group, y = mean, color = condition, group = group)) +
+                          geom_point(position = position_jitter(width = 0.08)) +
+                          #geom_errorbar(aes(ymin=sd_min, ymax=sd_max), width=.1, position = position_jitter(width = 0.08)) +
+                          labs(x = 'group', y = 'rating', color = 'semantic condition') +
+                          ggtitle('sensibility ratings') +
+                          ylim(0, 8)
+
+sum_plot
+
+#####-------------------------SAVING
+ggsave("mean_ratings.pdf", sum_plot, path = out_dir)
+write.table(summary_data, "ratings_sum.txt", quote = FALSE)
