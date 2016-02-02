@@ -7,6 +7,7 @@
 
 library(ggplot2)
 library(reshape)
+library(plyr)
 curr_dir = getwd()
 
 inp_dir = 'D:/Kristijan/raziskovalno/novel_meaning/data/logs'
@@ -27,7 +28,7 @@ my_data <- read.table("Ratings.txt", header = TRUE)
 #transform mood variable to factor
 my_data$mood <- factor(my_data$mood, levels = c(1,2), labels = c("happy", "sad"))
 
-#ratings
+#regenerating a data.frame with renamed columns
 ratings <- data.frame(ID = my_data$sID,
                   group = my_data$mood,
                   BL = my_data$E1,
@@ -39,40 +40,59 @@ ratings <- data.frame(ID = my_data$sID,
                   mot1 = my_data$M1,
                   mot2 = my_data$M2)
 
-#get summary statistics
-sum_stat_BL <- aggregate(ratings$BL, by = list(ratings$group), FUN = summary)
-sum_stat_mip1 <- aggregate(ratings$mip1, by = list(ratings$group), FUN = summary)
-sum_stat_mip2 <- aggregate(ratings$mip2, by = list(ratings$group), FUN = summary)
-sum_stat_mip3 <- aggregate(ratings$mip3, by = list(ratings$group), FUN = summary)
 
-#reshaping my data for plotting
+#melting my data for plotting
 ratings2 <- melt(ratings, id = c('ID', 'group'))
+names(ratings2)[3] <- 'scale'
+names(ratings2)[4] <- 'rating'
+
+#adding a new column vector scale_type conditioned on scale column
+ratings2$scale_type <- ratings2$scale
+levels(ratings2$scale_type) <- c(levels(ratings2$scale_type), "emo_")
+levels(ratings2$scale_type) <- c(levels(ratings2$scale_type), "ctrl")
+ratings2[ratings2$scale %in% c('BL', 'mip1', 'mip2', 'mip3'), "scale_type"] <- 'emo_'
+ratings2[ratings2$scale %in% c('att1', 'att2', 'mot1', 'mot2'), "scale_type"] <- 'ctrl'
 
 groupMeans <- cast(ratings2, formula = group~mip, value = "rating", mean)
 
-#####-------------------------PLOT-THE-DATA
+#####-------------------------SUMMARIZE-AND-PLOT-THE-DATA
 
-#summary plots
+#computing means and se (two ways for safety check)
+sum_data <- ddply(ratings2, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
 
-mip = ratings2$mip
-rating = ratings2$rating
-group = ratings2$group
+sum_data2 <- ddply(ratings2, c("group", 'scale'), summarise,
+                            N    = length(rating),
+                            mean = round(mean(rating),2),
+                            sd   = round(sd(rating),2),
+                            se   = round(sd / sqrt(N), 2),
+                            se_up = round((mean - se), 2),
+                            se_low = round((mean + se), 2))
 
-summary_plot <- ggplot(data = ratings2) +
-                
-                stat_summary(fun.data = 'mean_se',
-                              position = position_dodge(width = 0.5),
-                              aes(x = mip,
-                                  y = rating,
-                                  color = group)) +
-                
-                geom_abline(aes(x = mip,
-                                y = rating,
-                                color = group),
-                            stat = 'summary')
+sum_data2
+
+summary_plot2 <- ggplot(data = sum_data,
+                        aes(x = scale, y = y, color = group, group = group)) +
+                geom_errorbar(aes(ymin=ymin, ymax=ymax), width=.1) +
+                geom_line() +
+                geom_point() +
+                labs(x = 'rating', y = 'mip', color = 'group') +
+                ylim(-10, 10)
+
+summary(summary_plot)
 summary_plot
 
-#saving the plot
-ggsave(filename = 'logs_plot', plot = summary_plot, path = out_dir)
+summary_plot2 <- ggplot(data = sum_data2,
+                       aes(x = scale, y = mean, color = group, group = group)) +
+                geom_errorbar(aes(ymin=se_low, ymax=se_up), width=.1) +
+                geom_line() +
+                geom_point() +
+                labs(x = 'rating', y = 'mip', color = 'group') +
+                ylim(-10, 10)
+
+summary(summary_plot2)
+summary_plot2
 
 #####-------------------------PRINT-THE-DATA
+
+ggsave("logs_plot2.pdf", summary_plot2, path = out_dir)
+write.table(sum_data2, "logs_sum.txt", quote = FALSE)
