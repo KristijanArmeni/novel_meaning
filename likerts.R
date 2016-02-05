@@ -13,21 +13,18 @@ curr_dir = getwd()
 inp_dir = 'D:/Kristijan/raziskovalno/novel_meaning/data/logs'
 out_dir = 'D:/Kristijan/raziskovalno/novel_meaning/output/beh'
 
-subjects = c('s01', 's02', 's03', 's04')
-myfiles = list.files(pattern = '*log.txt')
-
-
 # set proper dir for reading in the files
 if (curr_dir != inp_dir){
   setwd(inp_dir)
 }
+
+myfiles = list.files(pattern = '*log.txt')
 
 #####-------------------------SUBJECT-LOOP
 
 for (i in 1:length(myfiles)){
   
   subject = substr(myfiles[i], 1, 3)
-  print(subject)
   
   sub_file <- read.table(myfiles[i], header = TRUE)
   
@@ -36,16 +33,11 @@ for (i in 1:length(myfiles)){
   else
   {sub_all <- rbind(sub_all, sub_file)}
   
-
 }
 
 #####-------------------------SUMMARIES
 
-names(summary_data)[2] <- 'group'
-summary_data$group <- factor(summary_data$group)
-summary_data$condition <- factor(summary_data$condition)
-
-
+#function that is used to compute the mode below
 my_mode <- function(x) {
   ux <- unique(x)
   ux[which.max(tabulate(match(x, ux)))]
@@ -60,6 +52,10 @@ summary_data <- ddply(sub_all, ~sID + Condition + condition,
                       sd_min   = round(mean - sd(sens_rat),2),
                       sd_max   = round(mean + sd(sens_rat), 2),
                       mode = my_mode(sens_rat))
+
+names(summary_data)[2] <- 'group'
+summary_data$group <- factor(summary_data$group)
+summary_data$condition <- factor(summary_data$condition)
 
 #####-------------------------PLOTS
 
