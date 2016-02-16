@@ -8,6 +8,7 @@
 library(ggplot2)
 library(reshape)
 library(plyr)
+library(psych)
 curr_dir = getwd()
 
 inp_dir = 'D:/Kristijan/raziskovalno/novel_meaning/data/logs'
@@ -28,8 +29,8 @@ my_data <- read.table("Ratings.txt", header = TRUE)
 #transform mood variable to factor
 my_data$mood <- factor(my_data$mood, levels = c(1,2), labels = c("happy", "sad"))
 
-#regenerating a data.frame with renamed columns
-ratings <- data.frame(ID = my_data$sID,
+#relabeling the columns
+my_data <- data.frame(ID = my_data$sID,
                   group = my_data$mood,
                   BL = my_data$E1,
                   mip1 = my_data$E2,
@@ -41,26 +42,31 @@ ratings <- data.frame(ID = my_data$sID,
                   mot2 = my_data$M2)
 
 
-#melting my data for plotting
-ratings2 <- melt(ratings, id = c('ID', 'group'))
-names(ratings2)[3] <- 'scale'
-names(ratings2)[4] <- 'rating'
+#reshaping and adding scale as a column-variable
+ratings <- melt(my_data, id = c('ID', 'group'))
+names(ratings)[3] <- 'scale'
+names(ratings)[4] <- 'rating'
 
 #adding a new column vector scale_type conditioned on scale column
-ratings2$scale_type <- ratings2$scale
-levels(ratings2$scale_type) <- c(levels(ratings2$scale_type), "emo_")
-levels(ratings2$scale_type) <- c(levels(ratings2$scale_type), "ctrl")
-ratings2[ratings2$scale %in% c('BL', 'mip1', 'mip2', 'mip3'), "scale_type"] <- 'emo_'
-ratings2[ratings2$scale %in% c('att1', 'att2', 'mot1', 'mot2'), "scale_type"] <- 'ctrl'
+ratings$scale_type <- ratings$scale
 
-groupMeans <- cast(ratings2, formula = group~mip, value = "rating", mean)
+levels(ratings$scale_type) <- c(levels(ratings$scale_type), "emo")
+levels(ratings$scale_type) <- c(levels(ratings$scale_type), "ctrl")
+
+ratings[ratings$scale %in% c('BL', 'mip1', 'mip2', 'mip3'), "scale_type"] <- 'emo'
+ratings[ratings$scale %in% c('att1', 'att2', 'mot1', 'mot2'), "scale_type"] <- 'ctrl'
+
+groupMeans <- cast(ratings, formula = group~scale, value = "rating", mean)
 
 #####-------------------------SUMMARIZE-AND-PLOT-THE-DATA
 
-#computing means and se (two ways for safety check)
-sum_data <- ddply(ratings2, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
+summary <- summary(ratings)
 
-sum_data2 <- ddply(ratings2, c("group", 'scale'), summarise,
+
+#computing means and se (two ways for safety check)
+sum_data <- ddply(ratings, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
+
+sum_data2 <- ddply(ratings, c("group", 'scale'), summarise,
                             N    = length(rating),
                             mean = round(mean(rating),2),
                             sd   = round(sd(rating),2),
