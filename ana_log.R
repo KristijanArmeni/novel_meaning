@@ -146,20 +146,22 @@ groupSd_sel <- cast(sel_data, formula = group~scale, value = "rating", sd)
 groupSd_sel[, -1] <- round(groupSd_sel[, -1], 2)
 
 #computing means and se (two ways for safety check)
-sum_data_check <- ddply(sel_data, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
+sum_dataSel_scaleType <- ddply(sel_data, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
 
-sum_data_sel <- ddply(sel_data, c("group", 'scale'), summarise,
-                   N    = length(rating),
-                   mean = round(mean(rating),2),
-                   sd   = round(sd(rating),2),
-                   se   = round(sd / sqrt(N), 2),
-                   se_up = round((mean - se), 2),
-                   se_low = round((mean + se), 2))
+sum_dataSel_groupScale <- ddply(sel_data,
+                                c("group", 'scale'),
+                                summarise,
+                                      N    = length(rating),
+                                      mean = round(mean(rating),2),
+                                      sd   = round(sd(rating),2),
+                                      se   = round(sd / sqrt(N), 2),
+                                      se_up = round((mean - se), 2),
+                                      se_low = round((mean + se), 2))
 
-sum_data_sel
+sum_dataSel_groupScale
 
 #mean + error_bar plot for all scales (x), both groups (color) and mean ratings (y)
-summary_plot_sel <- ggplot(data = sum_data_check,
+summary_plot_sel <- ggplot(data = sum_dataSel_scaleType,
                        aes(x = scale, y = y, color = group, group = group)) +
                     geom_errorbar(aes(ymin=ymin, ymax=ymax), width=.1) +
                     geom_line() +
@@ -173,12 +175,30 @@ summary_plot_sel <- ggplot(data = sum_data_check,
                     
                     scale_colour_discrete(name="mood",
                                         breaks=c("happy", "sad"),
-                                        labels=c("happy\n(N = 15)", "sad\n(N = 13)"))
+                                        labels=c("happy\n(N = 15)", "sad\n(N = 13)")) +
+  
+                    scale_x_discrete(breaks=c("BL", "mip1", "mip2", "mip3", "att1", "att2", "mot1", "mot2"),
+                                     labels=c("baseline", "mood-1", "mood-2", "mood-3", "att-1", "att-2", "mot-1", "mot-2"))
 
 summary(summary_plot_sel)
 summary_plot_sel
 
 #####-------------------------PRINT-THE-GENERAL-SUMMARY-DATA
 
+#creating file names with paths
+raw_data <- file.path(out_dir, 'mood_ratings.Rdata', fsep = '/')
+reshaped_data <- file.path(out_dir, 'moodRatings_reshaped.Rdata', fsep = '/')
+
+saveData <- file.path(out_dir, 'moodRatSel_scaleType.Rdata', fsep = '/')
+saveData2 <- file.path(out_dir, 'moodRatSel_groupScale.Rdata', fsep = '/')
+
+#save R objects
+save(sum_dataSel_scaleType, file = saveData)
+save(sum_dataSel_groupScale, file = saveData2)
+save(my_data, file = raw_data)
+save(ratings, file = reshaped_data)
+
+#save the plots and tables
 ggsave("logs_plot2.pdf", summary_plot, path = out_dir)
+ggsave("mean_ratings_selected.pdf", summary_plot_sel, path = out_dir)
 write.table(sum_data2, "rating_summary.txt", quote = FALSE)
