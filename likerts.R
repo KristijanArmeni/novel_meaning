@@ -8,6 +8,7 @@
 library(ggplot2)
 library(reshape)
 library(plyr)
+library(psych)
 curr_dir = getwd()
 
 inp_dir = 'D:/Kristijan/raziskovalno/novel_meaning/data/logs'
@@ -18,10 +19,13 @@ if (curr_dir != inp_dir){
   setwd(inp_dir)
 }
 
+#create a list with all filenames from the dir
 myfiles = list.files(pattern = '*log.txt')
+
 
 #####-------------------------SUBJECT-LOOP
 
+#loop through all the filenames (i.e. subjects)
 for (i in 1:length(myfiles)){
   
   subject = substr(myfiles[i], 1, 3)
@@ -35,6 +39,9 @@ for (i in 1:length(myfiles)){
   
 }
 
+sub_all <- head(sub_all[, -c(6, 10)])
+names(sub_all)[3] <- 'mood' 
+
 #####-------------------------SUMMARIES
 
 #function that is used to compute the mode below
@@ -43,7 +50,8 @@ my_mode <- function(x) {
   ux[which.max(tabulate(match(x, ux)))]
 }
 
-summary_data <- ddply(sub_all, ~sID + Condition + condition,
+#create a summary data frame using ddply()
+summary_data <- ddply(sub_all, ~sID + mood + condition,
                       summarise,
                       N = length(sens_rat),
                       min = min(sens_rat),
@@ -53,17 +61,20 @@ summary_data <- ddply(sub_all, ~sID + Condition + condition,
                       sd_max   = round(mean + sd(sens_rat), 2),
                       mode = my_mode(sens_rat))
 
+#factor the relevant columns
 names(summary_data)[2] <- 'group'
 summary_data$group <- factor(summary_data$group)
 summary_data$condition <- factor(summary_data$condition)
 
+summary_means <- describeBy(summary_data$mean, list(summary_data$group, summary_data$condition))
+
 #####-------------------------PLOTS
 
 sum_plot <- ggplot(data = summary_data,
-                          aes(x = group, y = mean, color = condition, group = group)) +
+                          aes(x = condition, y = mean, color = group, group = group)) +
                           geom_point(position = position_jitter(width = 0.08)) +
-                          #geom_errorbar(aes(ymin=sd_min, ymax=sd_max), width=.1, position = position_jitter(width = 0.08)) +
-                          labs(x = 'group', y = 'rating', color = 'semantic condition') +
+                          geom_line() +
+                          labs(x = 'semantic condition', y = 'rating', color = 'mood') +
                           ggtitle('sensibility ratings') +
                           ylim(0, 8)
 
