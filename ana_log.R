@@ -49,7 +49,7 @@ ratings <- melt(my_data, id = c('ID', 'group'))
 names(ratings)[3] <- 'scale'
 names(ratings)[4] <- 'rating'
 
-#adding a new column vector scale_type conditioned on scale column
+#adding a new column vector scale_type ('emo' or 'ctrl') conditioned on the scale column
 ratings$scale_type <- ratings$scale
 
 levels(ratings$scale_type) <- c(levels(ratings$scale_type), "emo")
@@ -70,6 +70,7 @@ summary[, -selected_columns] <- round(summary[,-selected_columns], 1)
 
 #summaries using cast()
 groupMeans <- cast(ratings, formula = group~scale, value = "rating", mean)
+groupMeans[, -1] <- round(groupMeans[, -1], 2)
 
 groupSd <- cast(ratings, formula = group~scale, value = "rating", sd)
 groupSd[, -1] <- round(groupSd[, -1], 2)
@@ -77,15 +78,13 @@ groupSd[, -1] <- round(groupSd[, -1], 2)
 #computing means and se (two ways for safety check)
 sum_data <- ddply(ratings, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
 
-sum_data2 <- ddply(ratings, c("group", 'scale'), summarise,
+sum_data_2 <- ddply(ratings, c("group", 'scale'), summarise,
                             N    = length(rating),
                             mean = round(mean(rating),2),
                             sd   = round(sd(rating),2),
                             se   = round(sd / sqrt(N), 2),
                             se_up = round((mean - se), 2),
                             se_low = round((mean + se), 2))
-
-sum_data2
 
 
 #####-------------------------PLOTS
@@ -109,7 +108,7 @@ summary(summary_plot)
 summary_plot
 
 #same as above, just using different data frame (safety check)
-summary_plot2 <- ggplot(data = sum_data2,
+summary_plot_2 <- ggplot(data = sum_data_2,
                        aes(x = scale, y = mean, color = group, group = group)) +
                 geom_errorbar(aes(ymin=se_low, ymax=se_up), width=.1) +
                 geom_line() +
@@ -117,8 +116,8 @@ summary_plot2 <- ggplot(data = sum_data2,
                 labs(x = 'rating', y = 'mip', color = 'group') +
                 ylim(-10, 10)
 
-summary(summary_plot2)
-summary_plot2
+summary(summary_plot_2)
+summary_plot_2
 
 
 #####-------------------------EEG_BASED_SUMMARY_AND_PLOTS
@@ -186,11 +185,11 @@ summary_plot_sel
 #####-------------------------PRINT-THE-GENERAL-SUMMARY-DATA
 
 #creating file names with paths
-raw_data <- file.path(out_dir, 'mood_ratings.Rdata', fsep = '/')
-reshaped_data <- file.path(out_dir, 'moodRatings_reshaped.Rdata', fsep = '/')
+raw_data <- file.path(inp_dir, 'Rdata_logs', 'ratings.Rdata', fsep = '/')
+reshaped_data <- file.path(inp_dir, 'Rdata_logs', 'ratings_reshaped.Rdata', fsep = '/')
 
-saveData <- file.path(out_dir, 'moodRatSel_scaleType.Rdata', fsep = '/')
-saveData2 <- file.path(out_dir, 'moodRatSel_groupScale.Rdata', fsep = '/')
+saveData <- file.path(out_dir, 'sumData_scaleType.Rdata', fsep = '/')
+saveData2 <- file.path(out_dir, 'sumData_groupScale.Rdata', fsep = '/')
 
 #save R objects
 save(sum_dataSel_scaleType, file = saveData)
@@ -199,6 +198,6 @@ save(my_data, file = raw_data)
 save(ratings, file = reshaped_data)
 
 #save the plots and tables
-ggsave("logs_plot2.pdf", summary_plot, path = out_dir)
-ggsave("mean_ratings_selected.pdf", summary_plot_sel, path = out_dir)
-write.table(sum_data2, "rating_summary.txt", quote = FALSE)
+ggsave("ratings_plot.pdf", summary_plot, width = 8, height = 5, path = out_dir)
+ggsave("ratings_selected.pdf", summary_plot_sel, width = 8, height = 5, path = out_dir)
+write.table(sum_data_2, "rating_summary.txt", quote = FALSE)
