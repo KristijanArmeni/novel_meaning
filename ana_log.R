@@ -117,7 +117,12 @@ summary_plot2
 
 #####-------------------------EEG_BASED_SUMMARY_AND_PLOTS
 
-sad = c('s04', 's06', 's08', 's10')
+#lists with selected subject ID's
+sad_subs    = c('s04', 's06', 's08', 's10', 's12', 's16', 's18', 's20', 's22', 's26', 's28', 's30', 's32')
+happy_subs  = c('s01', 's03', 's05', 's07', 's09', 's11', 's15', 's17', 's19', 's21', 's23', 's25', 's27', 's29', 's31')
+selected_subjects = c(happy_subs, sad_subs)
+
+sel_data = my_data[my_data$ID %in% selected_subjects, ]
 
 #####-------------------------PRINT-THE-GENERAL-SUMMARY-DATA
 
