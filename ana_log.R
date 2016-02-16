@@ -90,6 +90,7 @@ sum_data2
 
 #####-------------------------PLOTS
 
+#mean + error_bar plot for all scales (x), both groups (color) and mean ratings (y)
 summary_plot <- ggplot(data = sum_data,
                         aes(x = scale, y = y, color = group, group = group)) +
                 geom_errorbar(aes(ymin=ymin, ymax=ymax), width=.1) +
@@ -98,11 +99,16 @@ summary_plot <- ggplot(data = sum_data,
                 labs(x = 'rating label', y = 'mean rating', color = 'group') +
                 ylim(-10, 10) +
                 ggtitle("Emotion, attention and motivation ratings") + 
-                theme(plot.title = element_text(vjust = 1.5))
+                theme(plot.title = element_text(vjust = 1.5)) +
+  
+                scale_colour_discrete(name="mood",
+                                      breaks=c("happy", "sad"),
+                                      labels=c("happy\n(N = 16)", "sad\n(N = 16)"))
 
 summary(summary_plot)
 summary_plot
 
+#same as above, just using different data frame (safety check)
 summary_plot2 <- ggplot(data = sum_data2,
                        aes(x = scale, y = mean, color = group, group = group)) +
                 geom_errorbar(aes(ymin=se_low, ymax=se_up), width=.1) +
@@ -117,12 +123,60 @@ summary_plot2
 
 #####-------------------------EEG_BASED_SUMMARY_AND_PLOTS
 
-#lists with selected subject ID's
+#lists with selected subject ID's (based on useful EEG data)
 sad_subs    = c('s04', 's06', 's08', 's10', 's12', 's16', 's18', 's20', 's22', 's26', 's28', 's30', 's32')
 happy_subs  = c('s01', 's03', 's05', 's07', 's09', 's11', 's15', 's17', 's19', 's21', 's23', 's25', 's27', 's29', 's31')
 selected_subjects = c(happy_subs, sad_subs)
 
-sel_data = my_data[my_data$ID %in% selected_subjects, ]
+#this is the data frame with subject that have useful EEG data
+sel_data = ratings[ratings$ID %in% selected_subjects, ]
+
+#start summarizin the selected data
+summary_sel <- describeBy(sel_data$rating, list(sel_data$group, sel_data$scale), mat = TRUE)
+
+#rounding specific columns
+selected_columns <- c(1, 2, 3, 4, 5, 8, 11, 12, 13)
+summary_sel[, -selected_columns] <- round(summary_sel[,-selected_columns], 1)
+
+#summaries (mean & SD) using cast()
+groupMeans_sel <- cast(sel_data, formula = group~scale, value = "rating", mean)
+groupMeans_sel[, -1] <- round(groupMeans_sel[, -1], 2)
+
+groupSd_sel <- cast(sel_data, formula = group~scale, value = "rating", sd)
+groupSd_sel[, -1] <- round(groupSd_sel[, -1], 2)
+
+#computing means and se (two ways for safety check)
+sum_data_check <- ddply(sel_data, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
+
+sum_data_sel <- ddply(sel_data, c("group", 'scale'), summarise,
+                   N    = length(rating),
+                   mean = round(mean(rating),2),
+                   sd   = round(sd(rating),2),
+                   se   = round(sd / sqrt(N), 2),
+                   se_up = round((mean - se), 2),
+                   se_low = round((mean + se), 2))
+
+sum_data_sel
+
+#mean + error_bar plot for all scales (x), both groups (color) and mean ratings (y)
+summary_plot_sel <- ggplot(data = sum_data_check,
+                       aes(x = scale, y = y, color = group, group = group)) +
+                    geom_errorbar(aes(ymin=ymin, ymax=ymax), width=.1) +
+                    geom_line() +
+                    geom_point() +
+                    
+                    labs(x = 'rating label', y = 'mean rating', color = 'group') +
+                    ylim(-10, 10) +
+                    
+                    ggtitle("Emotion, attention and motivation ratings") + 
+                    theme(plot.title = element_text(vjust = 1.5, face = 'bold')) +
+                    
+                    scale_colour_discrete(name="mood",
+                                        breaks=c("happy", "sad"),
+                                        labels=c("happy\n(N = 15)", "sad\n(N = 13)"))
+
+summary(summary_plot_sel)
+summary_plot_sel
 
 #####-------------------------PRINT-THE-GENERAL-SUMMARY-DATA
 
