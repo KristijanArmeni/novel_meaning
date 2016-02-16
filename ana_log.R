@@ -19,10 +19,12 @@ if (curr_dir != inp_dir){
   setwd(inp_dir)
 }
 
+
 #####-------------------------READ-IN
 
 # read in the data
 my_data <- read.table("Ratings.txt", header = TRUE)
+
 
 #####-------------------------SHAPE-THE-DATA
 
@@ -42,7 +44,7 @@ my_data <- data.frame(ID = my_data$sID,
                   mot2 = my_data$M2)
 
 
-#reshaping and adding scale as a column-variable
+#reshaping and adding scale as a column-variable - RATINGS data frame
 ratings <- melt(my_data, id = c('ID', 'group'))
 names(ratings)[3] <- 'scale'
 names(ratings)[4] <- 'rating'
@@ -56,12 +58,21 @@ levels(ratings$scale_type) <- c(levels(ratings$scale_type), "ctrl")
 ratings[ratings$scale %in% c('BL', 'mip1', 'mip2', 'mip3'), "scale_type"] <- 'emo'
 ratings[ratings$scale %in% c('att1', 'att2', 'mot1', 'mot2'), "scale_type"] <- 'ctrl'
 
+
+
+#####-------------------------GENERAL-SUMMARY
+
+summary <- describeBy(ratings$rating, list(ratings$group,ratings$scale), mat = TRUE)
+
+#rounding specific columns
+selected_columns <- c(1, 2, 3, 4, 5, 8, 11, 12, 13)
+summary[, -selected_columns] <- round(summary[,-selected_columns], 1)
+
+#summaries using cast()
 groupMeans <- cast(ratings, formula = group~scale, value = "rating", mean)
 
-#####-------------------------SUMMARIZE-AND-PLOT-THE-DATA
-
-summary <- summary(ratings)
-
+groupSd <- cast(ratings, formula = group~scale, value = "rating", sd)
+groupSd[, -1] <- round(groupSd[, -1], 2)
 
 #computing means and se (two ways for safety check)
 sum_data <- ddply(ratings, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
@@ -76,13 +87,18 @@ sum_data2 <- ddply(ratings, c("group", 'scale'), summarise,
 
 sum_data2
 
-summary_plot2 <- ggplot(data = sum_data,
+
+#####-------------------------PLOTS
+
+summary_plot <- ggplot(data = sum_data,
                         aes(x = scale, y = y, color = group, group = group)) +
                 geom_errorbar(aes(ymin=ymin, ymax=ymax), width=.1) +
                 geom_line() +
                 geom_point() +
-                labs(x = 'rating', y = 'mip', color = 'group') +
-                ylim(-10, 10)
+                labs(x = 'rating label', y = 'mean rating', color = 'group') +
+                ylim(-10, 10) +
+                ggtitle("Emotion, attention and motivation ratings") + 
+                theme(plot.title = element_text(vjust = 1.5))
 
 summary(summary_plot)
 summary_plot
@@ -98,7 +114,12 @@ summary_plot2 <- ggplot(data = sum_data2,
 summary(summary_plot2)
 summary_plot2
 
-#####-------------------------PRINT-THE-DATA
 
-ggsave("logs_plot2.pdf", summary_plot2, path = out_dir)
-write.table(sum_data2, "logs_sum.txt", quote = FALSE)
+#####-------------------------EEG_BASED_SUMMARY_AND_PLOTS
+
+sad = c('s04', 's06', 's08', 's10')
+
+#####-------------------------PRINT-THE-GENERAL-SUMMARY-DATA
+
+ggsave("logs_plot2.pdf", summary_plot, path = out_dir)
+write.table(sum_data2, "rating_summary.txt", quote = FALSE)
