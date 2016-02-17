@@ -78,15 +78,29 @@ summary_means <- describeBy(summary_data$mean, list(summary_data$mood, summary_d
 summary_agg <- aggregate(summary_data$mean, by = list(summary_data$mood, summary_data$condition), FUN = mean)
 #####-------------------------PLOTS
 
-sum_plot <- ggplot(data = summary_agg,
-                          aes(x = Group.2, y = x, color = Group.1, group = Group.1)) +
-                          geom_point() +
-                          geom_line() +
-                          labs(x = 'semantic condition', y = 'rating', color = 'mood') +
-                          ggtitle('sensibility ratings') +
-                          ylim(0, 8)
+plot <-     ggplot(data = summary_data,
+                   aes(x = condition, y = mean, group = sID)) +
+            geom_point(size = 3,
+                       stroke = 3,
+                       color = 'darkgreen',
+                       fill = 'white',
+                       shape = 21,
+                       position = position_jitter(width = 0.15)) +
+            #geom_line(color = 'darkgreen', size = 0.8) +
+  
+            geom_point(data = summary_agg,
+                       aes(x = Group.2, y = x, group = Group.1),
+                       color = 'red',
+                       size = 4) +
+  
+            facet_grid(facets = . ~Group.1) +
+            facet_grid(facets = . ~ mood) +
+            labs(x = 'semantic condition', y = 'rating', color = 'mood') +
+            ggtitle('Sensibility ratings\n(mean per subject)') +
+            theme(plot.title = element_text(vjust = 1.5)) +
+            ylim(0, 8)
+plot
 
-sum_plot
 
 #####-------------------------SAVING
 
@@ -98,5 +112,5 @@ save(sub_all, file = save_data) #save sensibility ratings for all subjects in on
 save(summary_data, file = save_summary) #saving summary dataframe
 
 #saving plots & tables
-ggsave("mean_ratings.pdf", sum_plot, path = out_dir)
+ggsave("sensibility_ratings.pdf", plot, path = out_dir)
 write.table(summary_data, "ratings_sum.txt", quote = FALSE)
