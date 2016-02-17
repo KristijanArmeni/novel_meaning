@@ -48,6 +48,10 @@ sub_all <- sub_all[, -c(6, 10)]
 names(sub_all)[3] <- 'mood'
 names(sub_all)[4] <- 'paragrafnr'
 
+#factor the relevant columns
+sub_all$mood <- factor(sub_all$mood, levels = c(1, 2), labels = c('happy', 'sad'))
+sub_all$condition <- factor(sub_all$condition, levels = c(1, 2), labels = c('sens', 'nsens'))
+
 #####-------------------------SUMMARIES
 
 #function that is used to compute the mode below
@@ -67,17 +71,42 @@ summary_data <- ddply(sub_all, ~sID + mood + condition,
                       se = round(sd/sqrt(N), 2),
                       mode = my_mode(sens_rat))
 
-#factor the relevant columns
-summary_data$mood <- factor(summary_data$mood, levels = c(1, 2), labels = c('happy', 'sad'))
-summary_data$condition <- factor(summary_data$condition, levels = c(1, 2), labels = c('sens', 'nsens'))
-
 summary_split <- split(summary_data, f = list(summary_data$mood, summary_data$condition))
 
 #table of means by group and condition
 summary_means <- describeBy(summary_data$mean, list(summary_data$mood, summary_data$condition))
 summary_agg <- aggregate(summary_data$mean, by = list(summary_data$mood, summary_data$condition), FUN = mean)
+
+
 #####-------------------------PLOTS
 
+#custom function for changing facet labels on histogram
+mf_labeller <- function(var, value){
+  value <- as.character(value)
+  if (var=="mood") { 
+    value[value=="happy"] <- "happy (N = 16)"
+    value[value=="sad"]   <- "sad (N = 16)"
+  }
+  return(value)
+}
+
+#histogram across subjects
+my_hist <- ggplot(data = sub_all, aes(x = sens_rat, fill = condition)) +
+           geom_histogram(binwidth = 1, origin = - 0.5, color = 'black') +
+           
+           facet_grid(facets = . ~ mood, labeller = mf_labeller) + 
+           
+           scale_x_continuous(breaks = 1:7) + 
+           labs(x = 'sensibility rating') +
+           ggtitle('Sensibility rating counts\n(across subjects)') +
+           theme(plot.title = element_text(vjust = 1.5),
+                 strip.text.x = element_text()) +
+           
+           scale_fill_discrete(breaks=c("sens", "nsens"),
+                               labels=c("sensible", "non-\nsensible"))
+my_hist
+
+#means per subject and grand average plot
 plot <-     ggplot(data = summary_data,
                    aes(x = condition, y = mean, group = sID)) +
             geom_point(size = 3,
@@ -90,15 +119,15 @@ plot <-     ggplot(data = summary_data,
   
             geom_point(data = summary_agg,
                        aes(x = Group.2, y = x, group = Group.1),
-                       color = 'red',
+                       color = '#CC0000',
                        size = 4) +
   
+            facet_grid(facets = . ~ mood, margins = TRUE) +
             facet_grid(facets = . ~Group.1) +
-            facet_grid(facets = . ~ mood) +
-            labs(x = 'semantic condition', y = 'rating', color = 'mood') +
+            labs(x = 'semantic condition', y = 'mean rating') +
             ggtitle('Sensibility ratings\n(mean per subject)') +
             theme(plot.title = element_text(vjust = 1.5)) +
-            ylim(0, 8)
+            ylim(1, 7)
 plot
 
 
@@ -107,10 +136,12 @@ plot
 #saving R objects
 save_data <- file.path(core_dir, 'preproc', 'sensibility_all.Rdata', fsep = '/')
 save_summary <- file.path(out_dir, 'stats/descriptive', 'summary_sensibility.Rdata', fsep = '/')
+save_plot <- file.path(out_dir, 'plots', fsep = '/')
 
 save(sub_all, file = save_data) #save sensibility ratings for all subjects in one data frame
 save(summary_data, file = save_summary) #saving summary dataframe
 
 #saving plots & tables
-ggsave("sensibility_ratings.pdf", plot, path = out_dir)
+ggsave("sensibility_ratings.png", plot, width = 8, height = 5, path = save_plot)
+ggsave("sensibility_hist.png", my_hist, width = 8, height = 5, path = save_plot)
 write.table(summary_data, "ratings_sum.txt", quote = FALSE)
