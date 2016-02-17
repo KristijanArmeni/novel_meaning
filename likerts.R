@@ -9,6 +9,7 @@ library(ggplot2)
 library(reshape)
 library(plyr)
 library(psych)
+library(ez)
 curr_dir = getwd()
 
 inp_dir = 'D:/Kristijan/raziskovalno/novel_meaning/data/logs'
@@ -56,14 +57,13 @@ summary_data <- ddply(sub_all, ~sID + mood + condition,
                       N = length(sens_rat),
                       min = min(sens_rat),
                       max = max(sens_rat),
-                      mean = mean(sens_rat),
-                      sd_min   = round(mean - sd(sens_rat),2),
-                      sd_max   = round(mean + sd(sens_rat), 2),
+                      mean = round(mean(sens_rat),2),
+                      sd = round(sd(sens_rat), 2),
+                      se = round(sd/sqrt(N), 2),
                       mode = my_mode(sens_rat))
 
 #factor the relevant columns
-names(summary_data)[2] <- 'group'
-summary_data$group <- factor(summary_data$group)
+summary_data$group <- factor(summary_data$mood)
 summary_data$condition <- factor(summary_data$condition)
 
 summary_means <- describeBy(summary_data$mean, list(summary_data$group, summary_data$condition))
