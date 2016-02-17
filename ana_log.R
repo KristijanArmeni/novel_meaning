@@ -138,13 +138,6 @@ summary_sel <- describeBy(sel_data$rating, list(sel_data$group, sel_data$scale),
 selected_columns <- c(1, 2, 3, 4, 5, 8, 11, 12, 13)
 summary_sel[, -selected_columns] <- round(summary_sel[,-selected_columns], 1)
 
-#summaries (mean & SD) using cast()
-groupMeans_sel <- cast(sel_data, formula = group~scale, value = "rating", mean)
-groupMeans_sel[, -1] <- round(groupMeans_sel[, -1], 2)
-
-groupSd_sel <- cast(sel_data, formula = group~scale, value = "rating", sd)
-groupSd_sel[, -1] <- round(groupSd_sel[, -1], 2)
-
 #computing means and se (two ways for safety check)
 sum_dataSel_scaleType <- ddply(sel_data, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
 
@@ -216,15 +209,17 @@ BL_ttest <- t.test(BL_h, BL_s,)
 #creating file names with paths
 raw_data <- file.path(inp_dir, 'Rdata_logs', 'ratings.Rdata', fsep = '/')
 reshaped_data <- file.path(inp_dir, 'Rdata_logs', 'ratings_reshaped.Rdata', fsep = '/')
+raw_data_selected <- file.path(inp_dir, 'Rdata_logs', 'ratings_selected.Rdata', fsep = '/')
 
 saveData <- file.path(out_dir, 'sumData_scaleType.Rdata', fsep = '/')
 saveData2 <- file.path(out_dir, 'sumData_groupScale.Rdata', fsep = '/')
 
 #save R objects
-save(sum_dataSel_scaleType, file = saveData)
+save(sum_dataSel_scaleType, file = saveData) 
 save(sum_dataSel_groupScale, file = saveData2)
-save(my_data, file = raw_data)
-save(ratings, file = reshaped_data)
+save(my_data, file = raw_data) #imported data, just relabeled
+save(ratings, file = reshaped_data) #reshaped imported data
+save(data_sel, file = raw_data_selected) #EEG-specific data
 
 #save the plots and tables
 ggsave("ratings_plot.pdf", summary_plot, width = 8, height = 5, path = out_dir)
