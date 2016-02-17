@@ -69,13 +69,6 @@ summary <- describeBy(ratings$rating, list(ratings$group,ratings$scale), mat = T
 selected_columns <- c(1, 2, 3, 4, 5, 8, 11, 12, 13)
 summary[, -selected_columns] <- round(summary[,-selected_columns], 1)
 
-#summaries using cast()
-groupMeans <- cast(ratings, formula = group~scale, value = "rating", mean)
-groupMeans[, -1] <- round(groupMeans[, -1], 2)
-
-groupSd <- cast(ratings, formula = group~scale, value = "rating", sd)
-groupSd[, -1] <- round(groupSd[, -1], 2)
-
 #computing means and se (two ways for safety check)
 sum_data <- ddply(ratings, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
 
@@ -175,6 +168,8 @@ summary_plot_sel <- ggplot(data = sum_dataSel_scaleType,
 
 summary(summary_plot_sel)
 summary_plot_sel
+
+
 #####-------------------------STATS
 
 #subseting the original dataset for comparisons
@@ -217,9 +212,9 @@ saveData2 <- file.path(out_dir, 'sumData_groupScale.Rdata', fsep = '/')
 #save R objects
 save(sum_dataSel_scaleType, file = saveData) 
 save(sum_dataSel_groupScale, file = saveData2)
-save(my_data, file = raw_data) #imported data, just relabeled
-save(ratings, file = reshaped_data) #reshaped imported data
-save(data_sel, file = raw_data_selected) #EEG-specific data
+save(my_data, file = raw_data)                   #imported data, just relabeled
+save(ratings, file = reshaped_data)              #reshaped imported data
+save(sel_data, file = raw_data_selected)         #EEG-specific data
 
 #save the plots and tables
 ggsave("ratings_plot.pdf", summary_plot, width = 8, height = 5, path = out_dir)
