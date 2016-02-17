@@ -9,6 +9,7 @@ library(ggplot2)
 library(reshape)
 library(plyr)
 library(psych)
+library(ez)
 curr_dir = getwd()
 
 inp_dir = 'D:/Kristijan/raziskovalno/novel_meaning/data/logs'
@@ -181,6 +182,34 @@ summary_plot_sel <- ggplot(data = sum_dataSel_scaleType,
 
 summary(summary_plot_sel)
 summary_plot_sel
+#####-------------------------STATS
+
+#subseting the original dataset for comparisons
+ratings_emotion <- subset(sel_data, sel_data$scale_type == 'emo')
+
+BL <-   subset(ratings_emotion, ratings_emotion$scale == 'BL')
+mip1 <- subset(ratings_emotion, ratings_emotion$scale == 'mip1')
+mip2 <- subset(ratings_emotion, ratings_emotion$scale == 'mip2')
+mip3 <- subset(ratings_emotion, ratings_emotion$scale == 'mip3')
+
+#subseting for t-tests
+BL_h <- subset(BL, BL$group == 'happy')
+BL_s <- subset(BL, BL$group == 'sad')
+mip1_h <- subset(mip1, mip1$group == 'happy') 
+mip1_s <- subset(mip1, mip1$group == 'sad') 
+mip2_h <- subset(mip2, mip2$group == 'happy') 
+mip2_s <- subset(mip2, mip2$group == 'sad') 
+mip3_h <- subset(mip3, mip3$group == 'happy') 
+mip3_s <- subset(mip3, mip3$group == 'sad') 
+
+#ANOVA
+des <- ezDesign(data = ratings_emotion, .(group), .(rating), col = .(scale))
+summary(des)
+an <- ezANOVA(ratings_emotion, .(rating), within = .(scale), between = .(group), wid = .(ID))
+summary(an)
+
+#post-hoc t-test
+BL_ttest <- t.test(BL_h, BL_s,)
 
 #####-------------------------PRINT-THE-GENERAL-SUMMARY-DATA
 
