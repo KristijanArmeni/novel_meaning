@@ -92,8 +92,7 @@ mf_labeller <- function(var, value){
 
 #histogram across subjects
 my_hist <- ggplot(data = sub_all, aes(x = sens_rat)) +
-           geom_histogram(aes(y = ..density..),
-                          binwidth = 1,
+           geom_histogram(binwidth = 1,
                           position = 'identity',
                           origin = - 0.5,
                           alpha = 0.5,
