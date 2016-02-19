@@ -61,7 +61,7 @@ my_mode <- function(x) {
 }
 
 #create a summary data frame using ddply()
-summary_data <- ddply(sub_all, ~sID + mood + condition,
+summary_data <- ddply(sub_all, ~ mood + condition,
                       summarise,
                       N = length(sens_rat),
                       min = min(sens_rat),
@@ -91,10 +91,19 @@ mf_labeller <- function(var, value){
 }
 
 #histogram across subjects
-my_hist <- ggplot(data = sub_all, aes(x = sens_rat, fill = condition)) +
-           geom_histogram(binwidth = 1, origin = - 0.5, color = 'black') +
+my_hist <- ggplot(data = sub_all, aes(x = sens_rat)) +
+           geom_histogram(aes(y = ..density..),
+                          binwidth = 1,
+                          position = 'identity',
+                          origin = - 0.5,
+                          alpha = 0.5,
+                          color = 'black',
+                          fill = 'white') +
            
-           facet_grid(facets = . ~ mood, labeller = mf_labeller) + 
+           facet_grid(condition ~ mood, labeller = mf_labeller) + 
+           
+           geom_vline(data=summary_data, aes(xintercept=mean),
+                      linetype="dashed", size=1, colour="red") +
            
            scale_x_continuous(breaks = 1:7) + 
            labs(x = 'sensibility rating') +
