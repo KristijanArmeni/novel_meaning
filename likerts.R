@@ -69,13 +69,26 @@ summary_data <- ddply(sub_all, ~ mood + condition,
                       mean = round(mean(sens_rat),2),
                       sd = round(sd(sens_rat), 2),
                       se = round(sd/sqrt(N), 2),
+                      median = median(sens_rat),
+                      mode = my_mode(sens_rat))
+
+sum_dat_persub <- ddply(sub_all, ~ sID + mood + condition,
+                      summarise,
+                      N = length(sens_rat),
+                      min = min(sens_rat),
+                      max = max(sens_rat),
+                      mean = round(mean(sens_rat),2),
+                      sd = round(sd(sens_rat), 2),
+                      se = round(sd/sqrt(N), 2),
+                      median = median(sens_rat),
                       mode = my_mode(sens_rat))
 
 summary_split <- split(summary_data, f = list(summary_data$mood, summary_data$condition))
 
 #table of means by group and condition
 summary_means <- describeBy(summary_data$mean, list(summary_data$mood, summary_data$condition))
-summary_agg <- aggregate(summary_data$mean, by = list(summary_data$mood, summary_data$condition), FUN = mean)
+summary_mean <- aggregate(summary_data$mean, by = list(summary_data$mood, summary_data$condition), FUN = mean)
+summary_median <- aggregate(summary_data$mean, by = list(summary_data$mood, summary_data$condition), FUN = median)
 
 
 #####-------------------------PLOTS
@@ -96,12 +109,12 @@ my_hist <- ggplot(data = sub_all, aes(x = sens_rat)) +
                           position = 'identity',
                           origin = - 0.5,
                           alpha = 0.5,
-                          color = 'black',
-                          fill = 'white') +
+                          fill = 'white',
+                          color = 'black') +
            
            facet_grid(condition ~ mood, labeller = mf_labeller) + 
            
-           geom_vline(data=summary_data, aes(xintercept=mean),
+           geom_vline(data=summary_data, aes(xintercept = mean),
                       linetype="dashed", size=1, colour="red") +
            
            scale_x_continuous(breaks = 1:7) + 
@@ -115,7 +128,7 @@ my_hist <- ggplot(data = sub_all, aes(x = sens_rat)) +
 my_hist
 
 #means per subject and grand average plot
-plot <-     ggplot(data = summary_data,
+plot <-     ggplot(data = sum_dat_persub,
                    aes(x = condition, y = mean, group = sID)) +
             geom_point(size = 3,
                        stroke = 3,
@@ -123,7 +136,6 @@ plot <-     ggplot(data = summary_data,
                        fill = 'white',
                        shape = 21,
                        position = position_jitter(width = 0.15)) +
-            #geom_line(color = 'darkgreen', size = 0.8) +
   
             geom_point(data = summary_agg,
                        aes(x = Group.2, y = x, group = Group.1),
@@ -144,12 +156,14 @@ plot
 #saving R objects
 save_data <- file.path(core_dir, 'preproc', 'sensibility_all.Rdata', fsep = '/')
 save_summary <- file.path(out_dir, 'stats/descriptive', 'summary_sensibility.Rdata', fsep = '/')
+save_sum_persub <- file.path(out_dir, 'stats/descriptive', 'sum_sensibility_persubjects.Rdata', fsep = '/')
 save_plot <- file.path(out_dir, 'plots', fsep = '/')
 
 save(sub_all, file = save_data) #save sensibility ratings for all subjects in one data frame
 save(summary_data, file = save_summary) #saving summary dataframe
+save(sum_dat_persub, file = save_sum_persub) #saving summary dataframe per each subject
 
 #saving plots & tables
 ggsave("sensibility_ratings.png", plot, width = 8, height = 5, path = save_plot)
-ggsave("sensibility_hist.png", my_hist, width = 8, height = 5, path = save_plot)
+ggsave("sensibility_hist.png", my_hist, width = 5, height = 5, path = save_plot)
 write.table(summary_data, "ratings_sum.txt", quote = FALSE)
