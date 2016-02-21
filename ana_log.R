@@ -26,7 +26,17 @@ if (curr_dir != inp_dir){
 # read in the data
 my_data <- read.table("Ratings.txt", header = TRUE)
 
+#####-------------------------HELPER-FUNCTION
 
+#this function is called for renaming facet labels below
+mf_labeller <- function(var, value){
+  value <- as.character(value)
+  if (var=="scale_type") { 
+    value[value=="emo"] <- "mood"
+    value[value=="sad"]   <- "attention and motivation"
+  }
+  return(value)
+}
 #####-------------------------SHAPE-THE-DATA
 
 #transform mood variable to factor
@@ -156,6 +166,8 @@ summary_plot_sel <- ggplot(data = sum_dataSel_scaleType,
                     labs(x = 'rating label', y = 'mean rating', color = 'group') +
                     ylim(-10, 10) +
                     
+                    facet_grid(~ scale_type, scales = "free") +
+                    
                     ggtitle("Emotion, attention and motivation ratings") + 
                     theme(plot.title = element_text(vjust = 1.5, face = 'bold')) +
                     
@@ -164,7 +176,7 @@ summary_plot_sel <- ggplot(data = sum_dataSel_scaleType,
                                         labels=c("happy\n(N = 15)", "sad\n(N = 13)")) +
   
                     scale_x_discrete(breaks=c("BL", "mip1", "mip2", "mip3", "att1", "att2", "mot1", "mot2"),
-                                     labels=c("baseline", "mood-1", "mood-2", "mood-3", "att-1", "att-2", "mot-1", "mot-2"))
+                                     labels=c("baseline", "post-MIP1", "pre-MIP2", "post-MIP3", "att1", "att2", "mot1", "mot2"))
 
 summary(summary_plot_sel)
 summary_plot_sel
@@ -173,12 +185,14 @@ summary_plot_sel
 #####-------------------------PRINT-THE-GENERAL-SUMMARY-DATA
 
 #creating file names with paths
-raw_data <- file.path(inp_dir, 'Rdata_logs', 'ratings.Rdata', fsep = '/')
-reshaped_data <- file.path(inp_dir, 'Rdata_logs', 'ratings_reshaped.Rdata', fsep = '/')
+raw_data <- file.path(inp_dir, 'Rdata_logs', 'ratings.Rdata', fsep = '/') #imported data frame
+reshaped_data <- file.path(inp_dir, 'Rdata_logs', 'ratings_reshaped.Rdata', fsep = '/') #reshaped data frame
 raw_data_selected <- file.path(inp_dir, 'Rdata_logs', 'ratings_selected.Rdata', fsep = '/')
 
 saveData <- file.path(out_dir, 'sumData_scaleType.Rdata', fsep = '/')
 saveData2 <- file.path(out_dir, 'sumData_groupScale.Rdata', fsep = '/')
+
+savePlot <- file.path(out_dir, 'plots', fsep = '/')
 
 #save R objects
 save(sum_dataSel_scaleType, file = saveData) 
@@ -189,5 +203,5 @@ save(sel_data, file = raw_data_selected)         #EEG-specific data
 
 #save the plots and tables
 ggsave("ratings_plot.pdf", summary_plot, width = 8, height = 5, path = out_dir)
-ggsave("ratings_selected.pdf", summary_plot_sel, width = 8, height = 5, path = out_dir)
+ggsave("ratings_selected.png", summary_plot_sel, width = 8, height = 5, path = savePlot)
 write.table(sum_data_2, "rating_summary.txt", quote = FALSE)
