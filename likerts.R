@@ -68,7 +68,7 @@ summary_data <- ddply(sub_all, ~ mood + condition,
                       max = max(sens_rat),
                       mean = round(mean(sens_rat),2),
                       sd = round(sd(sens_rat), 2),
-                      se = round(sd/sqrt(N), 2),
+                      se = round(sd/sqrt(16), 2),
                       median = median(sens_rat),
                       mode = my_mode(sens_rat))
 
@@ -129,7 +129,7 @@ my_hist
 
 #means per subject and grand average plot
 plot <-     ggplot(data = sum_dat_persub,
-                   aes(x = condition, y = mean, group = sID)) +
+                   aes(x = condition, y = mean)) +
             geom_point(size = 3,
                        stroke = 3,
                        color = 'darkgreen',
@@ -137,13 +137,18 @@ plot <-     ggplot(data = sum_dat_persub,
                        shape = 21,
                        position = position_jitter(width = 0.15)) +
   
-            geom_point(data = summary_agg,
-                       aes(x = Group.2, y = x, group = Group.1),
+            geom_point(data = summary_data,
+                       aes(y = mean),
                        color = '#CC0000',
                        size = 4) +
+            
+            geom_errorbar(data =summary_data,
+                          aes(ymax = mean + se, ymin = mean - se),
+                          color = '#CC0000',
+                          width = 0.10,
+                          size = 1) +
   
-            facet_grid(facets = . ~ mood, margins = TRUE) +
-            facet_grid(facets = . ~Group.1) +
+            facet_grid(facets = . ~ mood) +
             labs(x = 'semantic condition', y = 'mean rating') +
             ggtitle('Sensibility ratings\n(mean per subject)') +
             theme(plot.title = element_text(vjust = 1.5)) +
