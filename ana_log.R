@@ -33,7 +33,7 @@ mf_labeller <- function(var, value){
   value <- as.character(value)
   if (var=="scale_type") { 
     value[value=="emo"] <- "mood"
-    value[value=="sad"]   <- "attention and motivation"
+    value[value=="ctrl"]   <- "attention and motivation"
   }
   return(value)
 }
@@ -101,7 +101,7 @@ summary_plot <- ggplot(data = sum_data,
                 geom_point() +
                 labs(x = 'rating label', y = 'mean rating', color = 'group') +
                 ylim(-10, 10) +
-                ggtitle("Emotion, attention and motivation ratings") + 
+                ggtitle("Mood, attention and motivation ratings") + 
                 theme(plot.title = element_text(vjust = 1.5)) +
   
                 scale_colour_discrete(name="mood",
@@ -166,17 +166,17 @@ summary_plot_sel <- ggplot(data = sum_dataSel_scaleType,
                     labs(x = 'rating label', y = 'mean rating', color = 'group') +
                     ylim(-10, 10) +
                     
-                    facet_grid(~ scale_type, scales = "free") +
+                    facet_grid(~ scale_type, scales = "free", labeller = mf_labeller) +
                     
                     ggtitle("Emotion, attention and motivation ratings") + 
                     theme(plot.title = element_text(vjust = 1.5, face = 'bold')) +
                     
-                    scale_colour_discrete(name="mood",
+                    scale_colour_discrete(name="group",
                                         breaks=c("happy", "sad"),
                                         labels=c("happy\n(N = 15)", "sad\n(N = 13)")) +
   
                     scale_x_discrete(breaks=c("BL", "mip1", "mip2", "mip3", "att1", "att2", "mot1", "mot2"),
-                                     labels=c("baseline", "post-MIP1", "pre-MIP2", "post-MIP3", "att1", "att2", "mot1", "mot2"))
+                                     labels=c("pre-MIP1", "post-MIP1", "pre-MIP2", "post-MIP2", "att1", "att2", "mot1", "mot2"))
 
 summary(summary_plot_sel)
 summary_plot_sel
