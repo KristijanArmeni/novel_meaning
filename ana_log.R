@@ -169,7 +169,7 @@ summary_plot_sel <- ggplot(data = sum_dataSel_scaleType,
                     
                     facet_grid(~ scale_type, scales = "free", labeller = mf_labeller) +
                     
-                    ggtitle("Emotion, attention and motivation ratings") + 
+                    ggtitle("Mood, attention and motivation ratings") + 
                     theme(plot.title = element_text(vjust = 1.5, face = 'bold')) +
                     
                     scale_colour_discrete(name="group",
@@ -188,21 +188,21 @@ summary_plot_sel
 #creating file names with paths
 raw_data <- file.path(inp_dir, 'Rdata_logs', 'ratings.Rdata', fsep = '/') #imported data frame
 reshaped_data <- file.path(inp_dir, 'Rdata_logs', 'ratings_reshaped.Rdata', fsep = '/') #reshaped data frame
-raw_data_selected <- file.path(inp_dir, 'Rdata_logs', 'ratings_selected.Rdata', fsep = '/')
+raw_data_selected <- file.path(inp_dir, 'Rdata_logs', 'ratings_selected.Rdata', fsep = '/') #path for EEG-specific data
 
-saveData <- file.path(out_dir, 'sumData_scaleType.Rdata', fsep = '/')
+saveData <- file.path(out_dir, 'sumData_scaleType.Rdata', fsep = '/') #path for summary data
 saveData2 <- file.path(out_dir, 'sumData_groupScale.Rdata', fsep = '/')
 
-savePlot <- file.path(out_dir, 'plots', fsep = '/')
+savePlot <- file.path(out_dir, 'plots', fsep = '/') #path for plot
 
 #save R objects
-save(sum_dataSel_scaleType, file = saveData) 
-save(sum_dataSel_groupScale, file = saveData2)
+save(sum_dataSel_scaleType, file = saveData)     #summary data grouped by scales and scale_types
+save(sum_dataSel_groupScale, file = saveData2)   #summary data grouped by scales
 save(my_data, file = raw_data)                   #imported data, just relabeled
 save(ratings, file = reshaped_data)              #reshaped imported data
 save(sel_data, file = raw_data_selected)         #EEG-specific data
 
 #save the plots and tables
-ggsave("ratings_plot.pdf", summary_plot, width = 8, height = 5, path = out_dir)
-ggsave("ratings_selected.png", summary_plot_sel, width = 8, height = 5, path = savePlot)
-write.table(sum_data_2, "rating_summary.txt", quote = FALSE)
+ggsave("ratings_plot.pdf", summary_plot, width = 8, height = 5, path = out_dir) #mood rating plot
+ggsave("ratings_selected.png", summary_plot_sel, width = 8, height = 5, path = savePlot) #mood rating plot (selected)
+write.table(sum_data_2, "rating_summary.txt", quote = FALSE) #summary table
