@@ -143,6 +143,7 @@ summary_sel[, -selected_columns] <- round(summary_sel[,-selected_columns], 1)
 
 #computing means and se (two ways for safety check)
 sum_dataSel_scaleType <- ddply(sel_data, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
+sum_dataSel_scaleType <- sum_dataSel_scaleType[-c(3, 11),] #removing the second MIP2 scores
 
 sum_dataSel_groupScale <- ddply(sel_data,
                                 c("group", 'scale'),
@@ -175,8 +176,8 @@ summary_plot_sel <- ggplot(data = sum_dataSel_scaleType,
                                         breaks=c("happy", "sad"),
                                         labels=c("happy\n(N = 15)", "sad\n(N = 13)")) +
   
-                    scale_x_discrete(breaks=c("BL", "mip1", "mip2", "mip3", "att1", "att2", "mot1", "mot2"),
-                                     labels=c("pre-MIP1", "post-MIP1", "pre-MIP2", "post-MIP2", "att1", "att2", "mot1", "mot2"))
+                    scale_x_discrete(breaks=c("BL", "mip1", "mip3", "att1", "att2", "mot1", "mot2"),
+                                     labels=c("pre-MIP1", "post-MIP1", "post-MIP2", "att1", "att2", "mot1", "mot2"))
 
 summary(summary_plot_sel)
 summary_plot_sel
