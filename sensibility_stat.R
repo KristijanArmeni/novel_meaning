@@ -28,7 +28,8 @@ dat2 <- split(sum_dat_persub, f = sum_dat_persub$mood)
 
 #####-------------------------STATS
 
-tS <- t.test(dat$happy.sens$mean, dat$happy.nsens$mean, paired = TRUE) 
-tH <- t.test(dat$sad.sens$mean, dat$sad.nsens$mean, paired = TRUE) 
+tS <- t.test(dat$happy.sens$mean, dat$happy.nsens$mean, paired = TRUE) #sensibility effect in happy group
+tH <- t.test(dat$sad.sens$mean, dat$sad.nsens$mean, paired = TRUE) #sensibility effect in sad group
+tM <- t.test(dat2$happy$mean, dat2$sad$mean) #main effect of mood acroos sensibility conditions
 
-t3 <- t.test(dat2$happy$mean, dat2$sad$mean)
+
