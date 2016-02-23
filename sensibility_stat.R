@@ -32,4 +32,11 @@ tS <- t.test(dat$happy.sens$mean, dat$happy.nsens$mean, paired = TRUE) #sensibil
 tH <- t.test(dat$sad.sens$mean, dat$sad.nsens$mean, paired = TRUE) #sensibility effect in sad group
 tM <- t.test(dat2$happy$mean, dat2$sad$mean) #main effect of mood acroos sensibility conditions
 
+#####-------------------------STATS
 
+fileT <- file.path(out_dir, "sensibility_t.txt")
+capture.output(tS, file = fileT)
+capture.output(tH, file = fileT, append = T)
+capture.output(tM, file = fileT, append = T)
+capture.output(print("Boferroni corrected p-values (N = 3):"), file = fileT, append = T)
+capture.output(print(p_adjust), file = fileT, append = T)
