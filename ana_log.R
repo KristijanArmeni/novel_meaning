@@ -70,7 +70,6 @@ ratings[ratings$scale %in% c('BL', 'mip1', 'mip2', 'mip3'), "scale_type"] <- 'em
 ratings[ratings$scale %in% c('att1', 'att2', 'mot1', 'mot2'), "scale_type"] <- 'ctrl'
 
 
-
 #####-------------------------GENERAL-SUMMARY
 
 summary <- describeBy(ratings$rating, list(ratings$group,ratings$scale), mat = TRUE)
@@ -111,18 +110,6 @@ summary_plot <- ggplot(data = sum_data,
 summary(summary_plot)
 summary_plot
 
-#same as above, just using different data frame (safety check)
-summary_plot_2 <- ggplot(data = sum_data_2,
-                       aes(x = scale, y = mean, color = group, group = group)) +
-                geom_errorbar(aes(ymin=se_low, ymax=se_up), width=.1) +
-                geom_line() +
-                geom_point() +
-                labs(x = 'rating', y = 'mip', color = 'group') +
-                ylim(-10, 10)
-
-summary(summary_plot_2)
-summary_plot_2
-
 
 #####-------------------------EEG_BASED_SUMMARY_AND_PLOTS
 
@@ -133,6 +120,7 @@ selected_subjects = c(happy_subs, sad_subs)
 
 #this is the data frame with subject that have useful EEG data
 sel_data = ratings[ratings$ID %in% selected_subjects, ]
+sel_data2 = ratings[ratings$scale != "mip2",] #data with only post MIPs
 
 #start summarizin the selected data
 summary_sel <- describeBy(sel_data$rating, list(sel_data$group, sel_data$scale), mat = TRUE)
@@ -182,7 +170,22 @@ summary_plot_sel <- ggplot(data = sum_dataSel_scaleType,
 summary(summary_plot_sel)
 summary_plot_sel
 
+boxP <- ggplot(data = sel_data2) +
+        
+        geom_boxplot(aes(x = scale, y = rating, color = group)) +
+        
+        facet_grid(~ scale_type, scales = "free", labeller = mf_labeller)+
+        labs(x = 'rating label', y = 'mean rating', color = 'group') +
+        ylim(-10, 10) +
+  
+        ggtitle("Mood, attention and motivation ratings") + 
+        theme(plot.title = element_text(vjust = 1.5, face = 'bold')) +
+  
+        scale_colour_discrete(name="group",
+                        breaks=c("happy", "sad"),
+                        labels=c("happy\n(N = 15)", "sad\n(N = 13)"))
 
+boxP
 #####-------------------------PRINT-THE-GENERAL-SUMMARY-DATA
 
 #creating file names with paths
