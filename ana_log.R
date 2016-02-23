@@ -133,8 +133,9 @@ summary_sel[, -selected_columns] <- round(summary_sel[,-selected_columns], 1)
 sum_dataSel_scaleType <- ddply(sel_data, ~group+scale+scale_type, function(x) round(mean_se(x$rating), 1))
 sum_dataSel_scaleType <- sum_dataSel_scaleType[-c(3, 11),] #removing the second MIP2 scores
 
+#summary data with group and condition variables
 sum_dataSel_groupScale <- ddply(sel_data,
-                                c("group", 'scale'),
+                                c("group", 'scale', 'scale_type'),
                                 summarise,
                                       N    = length(rating),
                                       mean = round(mean(rating),2),
@@ -143,12 +144,12 @@ sum_dataSel_groupScale <- ddply(sel_data,
                                       se_up = round((mean - se), 2),
                                       se_low = round((mean + se), 2))
 
-sum_dataSel_groupScale
+sum_dataSel_groupScale <- sum_dataSel_groupScale[sum_dataSel_groupScale$scale != "mip2",] #removing second MIP score
 
 #mean + error_bar plot for all scales (x), both groups (color) and mean ratings (y)
-summary_plot_sel <- ggplot(data = sum_dataSel_scaleType,
-                       aes(x = scale, y = y, color = group, group = group)) +
-                    geom_errorbar(aes(ymin=ymin, ymax=ymax), width=.1) +
+summary_plot_sel <- ggplot(data = sum_dataSel_groupScale,
+                       aes(x = scale, y = mean, color = group, group = group)) +
+                    geom_errorbar(aes(ymin=se_low, ymax=se_up), width=.1) +
                     geom_line() +
                     geom_point() +
                     
@@ -174,8 +175,11 @@ boxP <- ggplot(data = sel_data2) +
         
         geom_boxplot(aes(x = scale, y = rating, color = group)) +
         
-        facet_grid(~ scale_type, scales = "free", labeller = mf_labeller)+
-        labs(x = 'rating label', y = 'mean rating', color = 'group') +
+        facet_grid(~ scale_type, scales = "free",
+                   labeller = mf_labeller)+
+        labs(x = 'rating label',
+             y = 'mean rating',
+             color = 'group') +
         ylim(-10, 10) +
   
         ggtitle("Mood, attention and motivation ratings") + 
@@ -186,6 +190,18 @@ boxP <- ggplot(data = sel_data2) +
                         labels=c("happy\n(N = 15)", "sad\n(N = 13)"))
 
 boxP
+
+pointP <- ggplot(data = sel_data2) +
+          geom_point(aes(x = scale, y = rating, color = group, shape = group),
+                     position = position_jitter(width = 0.2)) +
+          facet_grid(~ scale_type, scales = "free",
+                     labeller = mf_labeller)+
+          labs(x = 'rating label',
+               y = 'mean rating',
+               color = 'group') +
+          ylim(-10, 10)
+
+pointP
 #####-------------------------PRINT-THE-GENERAL-SUMMARY-DATA
 
 #creating file names with paths
@@ -208,4 +224,5 @@ save(sel_data, file = raw_data_selected)         #EEG-specific data
 #save the plots and tables
 ggsave("ratings_plot.pdf", summary_plot, width = 8, height = 5, path = out_dir) #mood rating plot
 ggsave("ratings_selected.png", summary_plot_sel, width = 8, height = 5, path = savePlot) #mood rating plot (selected)
+ggsave("ratings_boxplot_selected", bPlot, width = 8, height = 5, path = savePlot) #boxplots for selected data
 write.table(sum_data_2, "rating_summary.txt", quote = FALSE) #summary table
